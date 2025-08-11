@@ -1,22 +1,16 @@
 #ifndef DISPLAY_MANAGER_H
 #define DISPLAY_MANAGER_H
 
-#include <Adafruit_SSD1306.h>
-
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET -1
-#define SCREEN_ADDRESS 0x3C
-
-const int NUM_ITEMS = 2;
-const int MAX_ITEM_LENGTH = 20;
-
-extern char menu_items[NUM_ITEMS][MAX_ITEM_LENGTH];
-
-extern Adafruit_SSD1306 display;
+#include <Arduino.h>
 
 int initDisplay();
-void displayText(const char *text);
-void updateMenuDisplay(int selected);
+
+void clearDisplay();
+void displayText(const String &text);
+void displayTextln(const String &text);
+
+void changeSelectedItem();
+int getSelectedItem();
+void updateMenuDisplay();
 
 #endif

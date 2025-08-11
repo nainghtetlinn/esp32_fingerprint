@@ -1,4 +1,14 @@
 #include "DisplayManager.h"
+#include <Adafruit_SSD1306.h>
+#include <Wire.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+
+const int NUM_ITEMS = 2;
+const int MAX_ITEM_LENGTH = 20;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -6,6 +16,8 @@ char menu_items[NUM_ITEMS][MAX_ITEM_LENGTH] = {
     {"Attendance"},
     {"Register"},
 };
+
+int item_selected = 1;
 
 int initDisplay()
 {
@@ -24,21 +36,42 @@ int initDisplay()
     }
 }
 
-void displayText(const char *text)
+void clearDisplay()
 {
     display.clearDisplay();
     display.setCursor(0, 0);
+}
+void displayTextln(const String &text)
+{
     display.println(text);
     display.display();
 }
-
-void updateMenuDisplay(int selected)
+void displayText(const String &text)
 {
-    display.clearDisplay();
-    display.setCursor(0, 0);
+    display.print(text);
+    display.display();
+}
+
+void changeSelectedItem()
+{
+    item_selected = item_selected + 1; // select next item
+    if (item_selected >= NUM_ITEMS)
+        item_selected = 0; // last item was selected, jump to first menu item
+
+    updateMenuDisplay();
+}
+
+int getSelectedItem()
+{
+    return item_selected;
+}
+
+void updateMenuDisplay()
+{
+    clearDisplay();
     for (int i = 0; i < NUM_ITEMS; i++)
     {
-        if (i == selected)
+        if (i == item_selected)
             display.setTextColor(BLACK, WHITE);
         else
             display.setTextColor(WHITE);

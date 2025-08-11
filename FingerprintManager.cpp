@@ -1,4 +1,6 @@
 #include "FingerprintManager.h"
+#include <Adafruit_Fingerprint.h>
+#include <HardwareSerial.h>
 
 HardwareSerial mySerial(2);
 Adafruit_Fingerprint finger(&mySerial);
@@ -91,7 +93,7 @@ int findFingerprintId()
     return finger.fingerID;
 }
 
-int findNextAvailableId()
+int findNextAvailableFingerprintId()
 {
     for (int id = 1; id < 127; id++)
     {
@@ -99,4 +101,33 @@ int findNextAvailableId()
             return id;
     }
     return -1;
+}
+
+void printFingerprintSensorDetails()
+{
+    Serial.println(F("Reading sensor parameters"));
+    finger.getParameters();
+    Serial.print(F("Status: 0x"));
+    Serial.println(finger.status_reg, HEX);
+    Serial.print(F("Sys ID: 0x"));
+    Serial.println(finger.system_id, HEX);
+    Serial.print(F("Capacity: "));
+    Serial.println(finger.capacity);
+    Serial.print(F("Security level: "));
+    Serial.println(finger.security_level);
+    Serial.print(F("Device address: "));
+    Serial.println(finger.device_addr, HEX);
+    Serial.print(F("Packet len: "));
+    Serial.println(finger.packet_len);
+    Serial.print(F("Baud rate: "));
+    Serial.println(finger.baud_rate);
+
+    finger.getTemplateCount();
+    Serial.print(finger.templateCount);
+    Serial.println(" templates");
+}
+
+void emptyFingerprintSensorDatabase()
+{
+    finger.emptyDatabase();
 }
