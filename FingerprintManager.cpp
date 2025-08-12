@@ -1,4 +1,5 @@
 #include "FingerprintManager.h"
+#include "DisplayManager.h"
 #include <Adafruit_Fingerprint.h>
 #include <HardwareSerial.h>
 
@@ -20,44 +21,61 @@ int initFingerprint()
     }
 }
 
-int enrollFingerprintInBuffer(int id)
+bool enrollFingerprintInBuffer(int id)
 {
+    Serial.println("Place finger");
     int p = -1;
-
     while (p != FINGERPRINT_OK)
         p = finger.getImage();
     p = finger.image2Tz(id);
-    if (p != FINGERPRINT_OK)
+    if (p == FINGERPRINT_OK)
     {
-        Serial.print("Failed to convert image to template :");
-        Serial.println(p);
-        return -1;
+        Serial.print("Stored fingerprint at buffer# ");
+        Serial.println(id);
+        return true;
     }
-
-    return 0;
+    Serial.print("Failed to store:");
+    Serial.println(p);
+    return false;
 }
 
-int enrollFingerprintInMemory(int id)
+bool checkIfFingerprintMatchedInBuffers()
+{
+    Serial.print("Checking if fingerprints in buffer 1 and 2 matched: ");
+    if (finger.createModel() == FINGERPRINT_OK)
+    {
+        Serial.println("MATCHED");
+        return true;
+    }
+    Serial.println("NOT MATCHED");
+    return false;
+}
+
+bool checkIfFingerprintAlreadyEnrolled()
+{
+    Serial.print("Checking if merged fingerprint already enrolled: ");
+    if (finger.fingerFastSearch() == FINGERPRINT_OK)
+    {
+        Serial.println("ENROLLED");
+        return true;
+    }
+    Serial.println("NOT ENROLLED");
+    return false;
+}
+
+bool enrollFingerprintInMemory(int id)
 {
     int p = -1;
-    p = finger.createModel();
-    if (p != FINGERPRINT_OK)
-    {
-        Serial.print("Fingerprints didn't match :");
-        Serial.println(p);
-        return -1;
-    }
-
     p = finger.storeModel(id);
-    if (p != FINGERPRINT_OK)
+    if (p == FINGERPRINT_OK)
     {
-        Serial.print("Failed to store :");
-        Serial.println(p);
-        return -1;
+        Serial.print("Stored fingerprint at ID# ");
+        Serial.println(id);
+        return true;
     }
-    Serial.print("Stored fingerprint at ID# ");
-    Serial.println(id);
-    return 0;
+    Serial.print("Failed to store :");
+    Serial.println(p);
+    return false;
 }
 
 void waitForFingerRemoved()
@@ -69,28 +87,13 @@ void waitForFingerRemoved()
 
 int findFingerprintId()
 {
-    int p = -1;
-    while (p != FINGERPRINT_OK)
-        p = finger.getImage();
-    p = finger.image2Tz();
-    if (p != FINGERPRINT_OK)
+    if (enrollFingerprintInBuffer(1) && checkIfFingerprintAlreadyEnrolled())
     {
-        Serial.print("Failed to convert image to template :");
-        Serial.println(p);
-        return -1;
+        Serial.print("Found fingerprint at ID# ");
+        Serial.println(finger.fingerID);
+        return finger.fingerID;
     }
-
-    p = finger.fingerFastSearch();
-    if (p != FINGERPRINT_OK)
-    {
-        Serial.print("Fingerprint not found :");
-        Serial.println(p);
-        return -1;
-    }
-
-    Serial.print("Found fingerprint at ID# ");
-    Serial.println(finger.fingerID);
-    return finger.fingerID;
+    return -1;
 }
 
 int findNextAvailableFingerprintId()
@@ -125,6 +128,20 @@ void printFingerprintSensorDetails()
     finger.getTemplateCount();
     Serial.print(finger.templateCount);
     Serial.println(" templates");
+}
+
+void deleteFingerprintWithId(int fpid)
+{
+    int p = finger.deleteModel(fpid);
+    if (p == FINGERPRINT_OK)
+    {
+        Serial.print("Deleted fingerprint ID# ");
+        Serial.println(fpid);
+    }
+    else
+    {
+        Serial.println("Deleting failed");
+    }
 }
 
 void emptyFingerprintSensorDatabase()

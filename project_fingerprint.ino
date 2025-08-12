@@ -32,6 +32,7 @@ void setup()
     displayTextln("...");
     result = -1;
     result = initHttp();
+    clearDisplay();
     if (result < 0)
     {
         displayTextln("Failed!");
@@ -61,9 +62,59 @@ static void handleClick()
     clearDisplay();
 
     if (item_selected == 0) // Attendance
-        displayAttendance();
+    {
+        int fpid = submitAttendance();
+        delay(1000);
+        if (fpid > 0)
+        {
+            clearDisplay();
+            displayTextln("Submitting attendance ...");
+            bool success = sendAttendance(fpid);
+            delay(1000);
+            clearDisplay();
+            if (success)
+            {
+                displayTextln("Submitted successfully!");
+            }
+            else
+            {
+                displayTextln("Something went wrong.");
+            }
+        }
+    }
     else if (item_selected == 1) // Register
-        displayRegister();
+    {
+        displayTextln("Finding not registered student ...");
+        bool success = fetchNotRegisteredStudent();
+        if (success)
+        {
+            int fpid = enrollFingerprint();
+            delay(1000);
+            if (fpid > 0)
+            {
+                clearDisplay();
+                displayTextln("Sending request ...");
+                success = false;
+                success = sendRegisteration(fpid);
+                delay(1000);
+                clearDisplay();
+                if (success)
+                {
+                    displayTextln("Registered successfully!");
+                }
+                else
+                {
+                    deleteFingerprintWithId(fpid);
+                    displayTextln("Something went wrong.");
+                }
+            }
+        }
+        else
+        {
+            clearDisplay();
+            displayTextln("All students have been registered");
+        }
+    }
 
     delay(2000);
     updateMenuDisplay();
@@ -80,74 +131,95 @@ static void handleLongPress()
     emptyFingerprintSensorDatabase();
 }
 
-void displayRegister()
+int enrollFingerprint()
 {
-    int id = findNextAvailableFingerprintId();
+    clearDisplay();
 
+    int id = findNextAvailableFingerprintId();
     if (id < 0)
     {
         displayTextln("No empty ID available");
-        return;
+        return -1;
     }
+
+    Serial.print("Available ID# ");
+    Serial.println(id);
 
     displayTextln("Place finger to register...");
-    int result1 = findFingerprintId();
-    if (result1 > 0)
+    bool success = false;
+    success = enrollFingerprintInBuffer(1);
+    if (!success)
     {
         clearDisplay();
-        displayTextln("Already registered");
-        displayText("ID# ");
-        displayTextln(String(result1));
-        return;
-    }
-
-    int buffer1 = enrollFingerprintInBuffer(1);
-    if (buffer1 != 0)
-    {
-        displayTextln("Try again!");
-        return;
+        displayTextln("Something went wrong. Try again!");
+        return -1;
     }
 
     clearDisplay();
     displayTextln("Remove finger");
     waitForFingerRemoved();
-
+    delay(1000);
     clearDisplay();
+
     displayTextln("Place the same finger again for confirmation...");
-    int buffer2 = enrollFingerprintInBuffer(2);
-    if (buffer2 != 0)
+    success = false;
+    success = enrollFingerprintInBuffer(2);
+    if (!success)
     {
         clearDisplay();
-        displayTextln("Try again!");
-        return;
+        displayTextln("Something went wrong. Try again!");
+        return -1;
     }
 
-    int result2 = enrollFingerprintInMemory(id);
-    if (result2 != 0)
+    bool matched = checkIfFingerprintMatchedInBuffers();
+    if (!matched)
     {
         clearDisplay();
-        displayTextln("Error");
-        return;
+        displayTextln("Fingerprints didn't match!");
+        return -1;
+    }
+
+    bool enrolled = checkIfFingerprintAlreadyEnrolled();
+    if (enrolled)
+    {
+        clearDisplay();
+        displayTextln("Fingerprint already enrolled!");
+        return -1;
+    }
+
+    bool stored = enrollFingerprintInMemory(id);
+    if (!stored)
+    {
+        clearDisplay();
+        displayTextln("Failed to store!");
+        return -1;
     }
 
     clearDisplay();
-    displayTextln("Success");
+    displayTextln("Success!");
     displayText("ID# ");
     displayTextln(String(id));
+
+    return id;
 }
 
-void displayAttendance()
+int submitAttendance()
 {
+    clearDisplay();
+
     displayTextln("Place finger for attendance...");
-    int result = findFingerprintId();
-    if (result < 0)
+    int id = findFingerprintId();
+    if (id < 0)
     {
-        displayTextln("Not found!");
-        return;
+        clearDisplay();
+        displayTextln("Fingerprint not found!");
+        return -1;
     }
 
     clearDisplay();
     displayTextln("Found!");
     displayText("ID# ");
-    displayTextln(String(result));
+    displayTextln(String(id));
+
+    return id;
 }

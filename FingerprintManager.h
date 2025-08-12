@@ -3,15 +3,17 @@
 
 int initFingerprint();
 
-int enrollFingerprintInBuffer(int id);
-int enrollFingerprintInMemory(int id);
+int findNextAvailableFingerprintId();
+bool enrollFingerprintInBuffer(int id);
+bool checkIfFingerprintMatchedInBuffers();
+bool checkIfFingerprintAlreadyEnrolled();
+bool enrollFingerprintInMemory(int id);
 
 void waitForFingerRemoved();
-
-int findNextAvailableFingerprintId();
 int findFingerprintId();
 
 void printFingerprintSensorDetails();
+void deleteFingerprintWithId(int fpid);
 void emptyFingerprintSensorDatabase();
 
 #endif
