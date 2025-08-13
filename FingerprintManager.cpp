@@ -106,7 +106,7 @@ int findNextAvailableFingerprintId()
     return -1;
 }
 
-void printFingerprintSensorDetails()
+void printFingerprintSensorDetails(int &level, int &count)
 {
     Serial.println(F("Reading sensor parameters"));
     finger.getParameters();
@@ -128,6 +128,9 @@ void printFingerprintSensorDetails()
     finger.getTemplateCount();
     Serial.print(finger.templateCount);
     Serial.println(" templates");
+
+    level = finger.security_level;
+    count = finger.templateCount;
 }
 
 void deleteFingerprintWithId(int fpid)

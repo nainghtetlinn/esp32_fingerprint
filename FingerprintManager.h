@@ -12,7 +12,7 @@ bool enrollFingerprintInMemory(int id);
 void waitForFingerRemoved();
 int findFingerprintId();
 
-void printFingerprintSensorDetails();
+void printFingerprintSensorDetails(int &level, int &count);
 void deleteFingerprintWithId(int fpid);
 void emptyFingerprintSensorDatabase();
 
