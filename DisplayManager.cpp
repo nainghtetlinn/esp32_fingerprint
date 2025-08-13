@@ -7,17 +7,17 @@
 #define OLED_RESET -1
 #define SCREEN_ADDRESS 0x3C
 
-const int NUM_ITEMS = 2;
+const int NUM_ITEMS = 3;
 const int MAX_ITEM_LENGTH = 20;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 char menu_items[NUM_ITEMS][MAX_ITEM_LENGTH] = {
-    {"Attendance"},
-    {"Register"},
-};
+    "Attendance",
+    "Register",
+    "Inspect"};
 
-int item_selected = 1;
+int item_selected = 0;
 
 int initDisplay()
 {
