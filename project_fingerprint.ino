@@ -4,6 +4,7 @@
 #include <OneButton.h>
 
 #define BUTTON_PIN 18
+#define BUZZER_PIN 25
 OneButton btn;
 
 void setup()
@@ -46,8 +47,18 @@ void setup()
     btn.attachDoubleClick(handleDoubleClick);
     btn.attachLongPressStart(handleLongPress);
 
+    pinMode(BUZZER_PIN, OUTPUT);
+    digitalWrite(BUZZER_PIN, HIGH);
+
     delay(2000);
     updateMenuDisplay();
+}
+
+void beep()
+{
+    digitalWrite(BUZZER_PIN, LOW);
+    delay(500);
+    digitalWrite(BUZZER_PIN, HIGH);
 }
 
 void loop()
@@ -115,6 +126,15 @@ static void handleClick()
             displayTextln("All students have been registered");
         }
     }
+    else if (item_selected == 2) // Inspect
+    {
+        int level, count;
+        printFingerprintSensorDetails(level, count);
+        displayText("Security level - ");
+        displayTextln(String(level));
+        displayText("Templates - ");
+        displayTextln(String(count));
+    }
 
     delay(2000);
     updateMenuDisplay();
@@ -127,7 +147,6 @@ static void handleDoubleClick()
 
 static void handleLongPress()
 {
-    printFingerprintSensorDetails();
     emptyFingerprintSensorDatabase();
 }
 
@@ -148,6 +167,9 @@ int enrollFingerprint()
     displayTextln("Place finger to register...");
     bool success = false;
     success = enrollFingerprintInBuffer(1);
+
+    beep();
+
     if (!success)
     {
         clearDisplay();
@@ -164,6 +186,9 @@ int enrollFingerprint()
     displayTextln("Place the same finger again for confirmation...");
     success = false;
     success = enrollFingerprintInBuffer(2);
+
+    beep();
+
     if (!success)
     {
         clearDisplay();
@@ -209,6 +234,9 @@ int submitAttendance()
 
     displayTextln("Place finger for attendance...");
     int id = findFingerprintId();
+
+    beep();
+
     if (id < 0)
     {
         clearDisplay();
